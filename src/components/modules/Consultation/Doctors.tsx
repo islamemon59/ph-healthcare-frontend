@@ -13,7 +13,7 @@ const Doctors = () => {
   console.log(data);
   return (
     <div>
-      {data.data.map((doctor: any) => (
+      {(data as any).data?.map((doctor: any) => (
         <p key={doctor.id}>{doctor.name}</p>
       ))}
     </div>
