@@ -2,6 +2,8 @@ import { cn } from "@/lib/utils";
 import { AnyFieldApi } from "@tanstack/react-form";
 import { Label } from "../../ui/label";
 import { Input } from "../../ui/input";
+import React from "react";
+
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error === "string") return error;
@@ -73,7 +75,9 @@ const AppField = ({
           disabled={disabled}
           aria-invalid={hasError}
           aria-describedby={hasError ? `${field.name}-error` : undefined}
-          className={cn(prepend && "pl-10", append && "pr-10")}
+          className={cn(prepend && "pl-10", append && "pr-10",
+            hasError && "border-destructive focus-visible:ring-destructive/20",
+          )} 
         ></Input>
         {append && (
           <div className="absolute inset-y-0 right-0 items-center pr-3 pointer-events-none z-10">
