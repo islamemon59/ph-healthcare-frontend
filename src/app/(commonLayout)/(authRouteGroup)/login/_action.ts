@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { httpClient } from "@/src/lib/axios/httpClient";
+import { setTokenInCookie } from "@/src/lib/cookieUtils";
 import { ApiErrorResponse } from "@/src/types/api.types";
 import { ILoginResponse } from "@/src/types/auth.types";
 import { ILoginPayload, loginZodSchema } from "@/src/zod/auth.validation";
@@ -21,6 +22,12 @@ export const LoginAction = async (
       "/auth/login",
       payload,
     );
+
+    const { accessToken, refreshToken, token } = response.data;
+
+    setTokenInCookie("accessToken", accessToken);
+    setTokenInCookie("refreshToken", refreshToken);
+    setTokenInCookie("better-auth.session_token", token);
 
     return response.data;
   } catch (error: any) {
