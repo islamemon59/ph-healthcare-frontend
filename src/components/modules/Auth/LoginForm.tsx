@@ -1,4 +1,4 @@
-"use client"
+"use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Card,
@@ -11,19 +11,19 @@ import {
 import { LoginAction } from "@/src/app/(commonLayout)/(authRouteGroup)/login/_action";
 import { ILoginPayload, loginZodSchema } from "@/src/zod/auth.validation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
-import AppField from "../../shared/form/AppField";
 import { Button } from "../../ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import AppSubmitButton from "../../shared/form/AppSubmitButton";
+import AppField from "../../shared/form/AppField";
 
 const LoginForm = () => {
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const queryClient = useQueryClient();
+  //   const queryClient = useQueryClient();
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: (payload: ILoginPayload) => LoginAction(payload),
@@ -39,12 +39,19 @@ const LoginForm = () => {
       setServerError(null);
       try {
         const result = (await mutateAsync(value)) as any;
-        console.log(result);
 
-        if (!result.success) {
+        if (result && !result.success) {
           setServerError(result.message || "Login failed");
         }
       } catch (error: any) {
+        // ✅ Let Next.js handle its own redirect error
+        if (
+          error?.digest?.startsWith("NEXT_REDIRECT") ||
+          error?.message?.includes("NEXT_REDIRECT")
+        ) {
+          throw error;
+        }
+
         console.log(`Login failed: ${error.message}`);
         setServerError(`Login failed: ${error.message}`);
       }
@@ -52,7 +59,7 @@ const LoginForm = () => {
   });
 
   return (
-    <Card>
+    <Card className="w-full max-w-md mx-auto shadow-md">
       <CardHeader>
         <CardTitle>Welcome Back!</CardTitle>
         <CardDescription>
@@ -75,26 +82,27 @@ const LoginForm = () => {
             name="email"
             validators={{ onChange: loginZodSchema.shape.email }}
           >
-            {(field) => {
+            {(field) => (
               <AppField
                 field={field}
                 label="Email"
                 type="email"
                 placeholder="Enter your email"
-              />;
-            }}
+              />
+            )}
           </form.Field>
 
           <form.Field
-            name="email"
+            name="password"
             validators={{ onChange: loginZodSchema.shape.password }}
           >
-            {(field) => {
+            {(field) => (
               <AppField
                 field={field}
                 label="Password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 append={
                   <Button
                     onClick={() => setShowPassword(!showPassword)}
@@ -108,8 +116,8 @@ const LoginForm = () => {
                     )}
                   </Button>
                 }
-              />;
-            }}
+              />
+            )}
           </form.Field>
 
           <div className="text-right mt-2">
@@ -131,7 +139,10 @@ const LoginForm = () => {
             selector={(s) => [s.canSubmit, s.isSubmitting] as const}
           >
             {([canSubmit, isSubmitting]) => (
-              <AppSubmitButton isPending={isSubmitting} disabled={!canSubmit}>
+              <AppSubmitButton
+                isPending={isSubmitting || isPending}
+                disabled={!canSubmit}
+              >
                 Log In
               </AppSubmitButton>
             )}

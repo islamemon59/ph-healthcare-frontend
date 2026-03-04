@@ -5,6 +5,7 @@ import { setCookie } from "./tokenUtils";
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 
 const getTokenSecondsRemaining = (token: string): number => {
+  console.log("token received", token);
   if (!token) {
     return 0;
   }
@@ -28,7 +29,11 @@ const getTokenSecondsRemaining = (token: string): number => {
   }
 };
 
-export const setTokenInCookie = async (name: string, token: string) => {
+export const setTokenInCookie = async (
+  name: string,
+  token: string,
+  fallbackMaxAgeInSeconds = 60 * 60 * 24,
+) => {
   const maxAgeInSeconds = getTokenSecondsRemaining(token);
-  await setCookie(name, token, maxAgeInSeconds);
+  await setCookie(name, token, maxAgeInSeconds || fallbackMaxAgeInSeconds || 0);
 };
