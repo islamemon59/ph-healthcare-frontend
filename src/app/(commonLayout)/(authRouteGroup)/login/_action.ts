@@ -23,12 +23,11 @@ export const LoginAction = async (
 
     const { accessToken, refreshToken, token } = response.data;
 
-    console.log({accessToken, refreshToken, token});
-
-    setTokenInCookie("accessToken", accessToken);
-    setTokenInCookie("refreshToken", refreshToken);
-    setTokenInCookie("better-auth.session_token", token, 60 * 60 * 24);
-
+    await Promise.all([
+      setTokenInCookie("accessToken", accessToken),
+      setTokenInCookie("refreshToken", refreshToken),
+      setTokenInCookie("better-auth.session_token", token, 60 * 60 * 24),
+    ]);
   } catch (error: any) {
     return {
       success: false,
