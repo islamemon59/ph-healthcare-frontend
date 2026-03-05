@@ -35,5 +35,5 @@ export const LoginAction = async (
     };
   }
 
-  redirect("/dashboard"); // ✅ outside try/catch — no interception issues
+  redirect("/dashboard"); 
 };
