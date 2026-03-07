@@ -20,13 +20,18 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import AppSubmitButton from "../../shared/form/AppSubmitButton";
 import AppField from "../../shared/form/AppField";
 
-const LoginForm = () => {
+interface LoginFormProps {
+  redirectPath?: string;
+}
+
+
+const LoginForm = ({ redirectPath }: LoginFormProps) => {
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   //   const queryClient = useQueryClient();
 
   const { mutateAsync, isPending } = useMutation({
-    mutationFn: (payload: ILoginPayload) => LoginAction(payload),
+    mutationFn: (payload: ILoginPayload) => LoginAction(payload, redirectPath as string),
   });
 
   const form = useForm({
