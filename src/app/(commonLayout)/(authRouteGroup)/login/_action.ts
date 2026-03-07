@@ -46,6 +46,7 @@ export const LoginAction = async (
         redirectPath && isValidRedirectRole(redirectPath, role as UserRole)
           ? redirectPath
           : getDefaultDashboardRoute(role as UserRole);
+          console.log("target Path",targetPath);
       redirect(targetPath);
     }
   } catch (error: any) {
