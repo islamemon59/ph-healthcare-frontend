@@ -5,10 +5,10 @@ import { setCookie } from "./tokenUtils";
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 
 const getTokenSecondsRemaining = (token: string): number => {
-  console.log("token received", token);
   if (!token) {
     return 0;
   }
+
 
   try {
     const tokenPayload = JWT_ACCESS_SECRET
