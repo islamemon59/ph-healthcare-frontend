@@ -7,9 +7,24 @@ import {
   isAuthRoute,
   UserRole,
 } from "./lib/authUtils";
+import { getNewTokenWithRefreshToken } from "./services/auth.services";
+import { isTokenExpiringSoon } from "./lib/tokenUtils";
+
+async function refreshTokenMiddleware(refreshToken: string): Promise<boolean> {
+  try {
+    const refresh = await getNewTokenWithRefreshToken(refreshToken);
+    if (!refresh) {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Error in refreshTokenMiddleware:", error);
+    return false;
+  }
+}
 
 // This function can be marked `async` if using `await` inside
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl;
 
@@ -41,9 +56,39 @@ export function proxy(request: NextRequest) {
 
     userRole = unifySuperAdminAndAdminRole;
 
-    console.log("UserRole", userRole);
-
     const isAuth = isAuthRoute(pathname);
+
+    if (
+      isValidAccessToken &&
+      refreshToken &&
+      (await isTokenExpiringSoon(refreshToken))
+    ) {
+      const requestHeaders = new Headers(request.headers);
+
+      const response = NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
+
+      try {
+        const refreshed = await refreshTokenMiddleware(refreshToken);
+
+        if (refreshed) {
+          requestHeaders.set("x-token-refreshed", "1");
+        }
+
+        return NextResponse.next({
+          request: {
+            headers: requestHeaders,
+          },
+          headers: response.headers,
+        });
+      } catch (error) {
+        console.error("Error in refreshTokenMiddleware:", error);
+      }
+      return response;
+    }
 
     //Rule - 1: User is logged in (has access token) and trying to access auth route -> allow
     if (isAuth && isValidAccessToken) {
