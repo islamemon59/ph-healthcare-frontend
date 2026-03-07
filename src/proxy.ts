@@ -131,10 +131,33 @@ export async function proxy(request: NextRequest) {
     }
 
     //Rule - 3: User is not logged in but trying to access protected route -> redirect to login
-    if (!accessToken && isValidAccessToken) {
+    if (!accessToken && !isValidAccessToken) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
+    }
+
+    ///need password change scenario
+    if (accessToken) {
+      const userInfo = await getUserInfo();
+
+      if (userInfo.emailVerified === false) {
+        if (pathname !== "verify-email") {
+          const verifyEmailUrl = new URL("/verify-email", request.url);
+          verifyEmailUrl.searchParams.set("email", userInfo.email);
+          return NextResponse.redirect(verifyEmailUrl);
+        }
+        return NextResponse.next();
+      }
+
+      if (userInfo.needPasswordChange) {
+        if (pathname !== "reset-password") {
+          const resetPasswordUrl = new URL("/reset-password", request.url);
+          resetPasswordUrl.searchParams.set("email", userInfo.email);
+          return NextResponse.redirect(resetPasswordUrl);
+        }
+        return NextResponse.next();
+      }
     }
 
     //Rule - 4: User trying to access common protected route -> allow

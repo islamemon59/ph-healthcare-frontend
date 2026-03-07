@@ -5,7 +5,7 @@ import {
   UserRole,
 } from "@/src/lib/authUtils";
 import { httpClient } from "@/src/lib/axios/httpClient";
-import { setTokenInCookie } from "@/src/lib/cookieUtils";
+import { setTokenInCookies } from "@/src/lib/tokenUtils";
 import { ApiErrorResponse } from "@/src/types/api.types";
 import { ILoginResponse } from "@/src/types/auth.types";
 import { ILoginPayload, loginZodSchema } from "@/src/zod/auth.validation";
@@ -29,32 +29,35 @@ export const LoginAction = async (
 
     const { accessToken, refreshToken, token, user } = response.data;
 
-    const { emailVerified, email, needPasswordChange, role } = user;
+    const { email, needPasswordChange, role } = user;
 
     await Promise.all([
-      setTokenInCookie("accessToken", accessToken),
-      setTokenInCookie("refreshToken", refreshToken),
-      setTokenInCookie("better-auth.session_token", token, 60 * 60 * 24),
+      setTokenInCookies("accessToken", accessToken),
+      setTokenInCookies("refreshToken", refreshToken),
+      setTokenInCookies("better-auth.session_token", token, 60 * 60 * 24),
     ]);
 
-    if (!emailVerified) {
-      redirect("/verify-email");
-    } else if (needPasswordChange) {
+    if (needPasswordChange) {
       redirect(`/reset-password?email=${email}`);
     } else {
       const targetPath =
         redirectPath && isValidRedirectRole(redirectPath, role as UserRole)
           ? redirectPath
           : getDefaultDashboardRoute(role as UserRole);
-          console.log("target Path",targetPath);
+      console.log("target Path", targetPath);
       redirect(targetPath);
     }
   } catch (error: any) {
+    if (
+      error &&
+      error.response &&
+      error.response.data.message === "Email not verified"
+    ) {
+      redirect(`/verify-email?email=${payload.email}`);
+    }
     return {
       success: false,
       message: `Login failed: ${error.message}`,
     };
   }
-
-  redirect("/dashboard");
 };
