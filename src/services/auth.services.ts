@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { setTokenInCookie } from "../lib/cookieUtils";
+import { setTokenInCookies } from "../lib/tokenUtils";
 
 const BASE_API_URL = process.env.NEXT_PUBLIC_BASE_API_URL;
 
@@ -29,13 +29,13 @@ export async function getNewTokenWithRefreshToken(
 
     if (accessToken && refreshToken) {
       await Promise.all([
-        setTokenInCookie("accessToken", accessToken),
-        setTokenInCookie("refreshToken", newRefreshToken),
+        setTokenInCookies("accessToken", accessToken),
+        setTokenInCookies("refreshToken", newRefreshToken),
       ]);
     }
 
     if (token) {
-      await setTokenInCookie("better-auth.session_token", token, 60 * 60 * 24);
+      await setTokenInCookies("better-auth.session_token", token, 60 * 60 * 24);
     }
 
     return true;

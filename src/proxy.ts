@@ -7,7 +7,10 @@ import {
   isAuthRoute,
   UserRole,
 } from "./lib/authUtils";
-import { getNewTokenWithRefreshToken } from "./services/auth.services";
+import {
+  getNewTokenWithRefreshToken,
+  getUserInfo,
+} from "./services/auth.services";
 import { isTokenExpiringSoon } from "./lib/tokenUtils";
 
 async function refreshTokenMiddleware(refreshToken: string): Promise<boolean> {
@@ -25,9 +28,8 @@ async function refreshTokenMiddleware(refreshToken: string): Promise<boolean> {
 
 // This function can be marked `async` if using `await` inside
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
   try {
-    const { pathname } = request.nextUrl;
-
     const accessToken = request.cookies.get("accessToken")?.value;
     const refreshToken = request.cookies.get("refreshToken")?.value;
 
@@ -95,6 +97,32 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(
         new URL(getDefaultDashboardRoute(userRole as UserRole), request.url),
       );
+    }
+
+    if (pathname === "/reset-password") {
+      const email = request.nextUrl.searchParams.get("email");
+      if (accessToken && email) {
+        const userInfo = await getUserInfo();
+
+        if (userInfo.needPasswordChange) {
+          return NextResponse.next();
+        } else {
+          return NextResponse.redirect(
+            new URL(
+              getDefaultDashboardRoute(userRole as UserRole),
+              request.url,
+            ),
+          );
+        }
+      }
+
+      if (email) {
+        return NextResponse.next();
+      }
+
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
     }
 
     // Rule - 2: User trying to to access public route -> allow
