@@ -2,7 +2,7 @@ import { ApiResponse } from "@/src/types/api.types";
 import axios from "axios";
 import { isTokenExpiringSoon } from "../tokenUtils";
 import { cookies, headers } from "next/headers";
-import { getNewTokenWithRefreshToken } from "@/src/services/auth.services";
+import { getNewTokensWithRefreshToken } from "@/src/services/auth.services";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -22,7 +22,7 @@ if(requestHeaders.get("x-token-refreshed") === "1"){
 }
 
 try {
-  await getNewTokenWithRefreshToken(refreshToken);
+  await getNewTokensWithRefreshToken(refreshToken);
 } catch (error) {
   console.error("Error refreshing token in http client:", error);
 }
