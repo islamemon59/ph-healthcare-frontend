@@ -16,7 +16,7 @@ import React, { useState } from "react";
 import { Button } from "../../ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import AppSubmitButton from "../../shared/form/AppSubmitButton";
 import AppField from "../../shared/form/AppField";
 
