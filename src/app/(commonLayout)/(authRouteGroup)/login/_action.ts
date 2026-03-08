@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  getDefaultDashboardRoute,
-  isValidRedirectRole,
-  UserRole,
-} from "@/src/lib/authUtils";
+"use server";
+import { getDefaultDashboardRoute, isValidRedirectForRole, UserRole } from "@/src/lib/authUtils";
 import { httpClient } from "@/src/lib/axios/httpClient";
 import { setTokenInCookies } from "@/src/lib/tokenUtils";
 import { ApiErrorResponse } from "@/src/types/api.types";
@@ -11,16 +8,19 @@ import { ILoginResponse } from "@/src/types/auth.types";
 import { ILoginPayload, loginZodSchema } from "@/src/zod/auth.validation";
 import { redirect } from "next/navigation";
 
-export const LoginAction = async (
+export const loginAction = async (
   payload: ILoginPayload,
-  redirectPath: string,
+  redirectPath?: string,
 ): Promise<ILoginResponse | ApiErrorResponse> => {
   const parsedPayload = loginZodSchema.safeParse(payload);
 
   if (!parsedPayload.success) {
-    return { success: false, message: parsedPayload.error.message };
+    const firstError = parsedPayload.error.issues[0].message || "Invalid input";
+    return {
+      success: false,
+      message: firstError,
+    };
   }
-
   try {
     const response = await httpClient.post<ILoginResponse>(
       "/auth/login",
@@ -28,26 +28,39 @@ export const LoginAction = async (
     );
 
     const { accessToken, refreshToken, token, user } = response.data;
+    const { role, needPasswordChange, email } = user;
+    await setTokenInCookies("accessToken", accessToken);
+    await setTokenInCookies("refreshToken", refreshToken);
+    await setTokenInCookies("better-auth.session_token", token, 24 * 60 * 60); // 1 day in seconds
 
-    const { email, needPasswordChange, role } = user;
-
-    await Promise.all([
-      setTokenInCookies("accessToken", accessToken),
-      setTokenInCookies("refreshToken", refreshToken),
-      setTokenInCookies("better-auth.session_token", token, 60 * 60 * 24),
-    ]);
+    // if(!emailVerified){
+    //     redirect("/verify-email");
+    // }else // in the catch block
 
     if (needPasswordChange) {
+      //TODO : refactoring
       redirect(`/reset-password?email=${email}`);
     } else {
+      // redirect(redirectPath || "/dashboard");
       const targetPath =
-        redirectPath && isValidRedirectRole(redirectPath, role as UserRole)
+        redirectPath && isValidRedirectForRole(redirectPath, role as UserRole)
           ? redirectPath
           : getDefaultDashboardRoute(role as UserRole);
-      console.log("target Path", targetPath);
+
       redirect(targetPath);
     }
   } catch (error: any) {
+    console.log(error, "error");
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      typeof error.digest === "string" &&
+      error.digest.startsWith("NEXT_REDIRECT")
+    ) {
+      throw error;
+    }
+
     if (
       error &&
       error.response &&
