@@ -8,6 +8,8 @@ import { NavSection } from "@/src/types/dashboard.types";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
+import NotificationDropdown from "./NotificationDropdown";
+import UserDropdown from "./UserDropdown";
 
 interface DashboardNavbarProps {
   userInfo: UserInfo;
@@ -61,6 +63,15 @@ const DashboardNavbarContent = ({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input type="text" placeholder="Search..." className="pl-9 pr-4" />
         </div>
+      </div>
+
+            {/* Right Side Actions */}
+      <div className="flex items-center gap-2">
+          {/* Notification */}
+          <NotificationDropdown/>
+
+          {/* User Dropdown  */}
+          <UserDropdown userInfo={userInfo}/>
       </div>
     </div>
   );
