@@ -33,9 +33,6 @@ export const loginAction = async (
     await setTokenInCookies("refreshToken", refreshToken);
     await setTokenInCookies("better-auth.session_token", token, 24 * 60 * 60); // 1 day in seconds
 
-    // if(!emailVerified){
-    //     redirect("/verify-email");
-    // }else // in the catch block
 
     if (needPasswordChange) {
       //TODO : refactoring
