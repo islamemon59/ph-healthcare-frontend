@@ -1,66 +1,44 @@
-/* eslint-disable react-hooks/incompatible-library */
 "use client";
 import { getDoctors } from "@/src/services/doctor.services";
 import { useQuery } from "@tanstack/react-query";
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import DataTable from "../../shared/table/DataTable";
+import { IDoctor } from "@/src/types/doctor.types";
 
 const DoctorsTable = () => {
   const doctorsColumns = [
     { accessorKey: "name", header: "Name" },
     { accessorKey: "experience", header: "Experience" },
   ];
-  const { data: doctorDataResponse } = useQuery({
+  const { data: doctorDataResponse, isLoading } = useQuery({
     queryKey: ["doctors"],
     queryFn: getDoctors,
   });
 
   const { data: doctors } = doctorDataResponse! || [];
 
-  const { getHeaderGroups, getRowModel } = useReactTable({
-    data: doctors,
-    columns: doctorsColumns,
-    getCoreRowModel: getCoreRowModel(),
-  });
+  const handleView = (doctor: IDoctor) => {
+    console.log("View doctor", doctor);
+  };
+
+  const handleEdit = (doctor: IDoctor) => {
+    console.log("Edit doctor", doctor);
+  };
+
+  const handleDelete = (doctor: IDoctor) => {
+    console.log("Delete doctor", doctor);
+  };
   return (
-    <Table>
-      <TableHeader>
-        {getHeaderGroups().map((hg) => (
-          <TableRow key={hg.id}>
-            {hg.headers.map((header) => (
-              <TableHead key={header.id}>
-                {flexRender(
-                  header.column.columnDef.header,
-                  header.getContext(),
-                )}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-                {getRowModel().rows.map((row) => (
-          <TableRow key={row.id}>
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      data={doctors}
+      columns={doctorsColumns}
+      isLoading={isLoading}
+      emptyMessage="No doctors found."
+      actions={{
+        onView: handleView,
+        onEdit: handleEdit,
+        onDelete: handleDelete,
+      }}
+    />
   );
 };
 
