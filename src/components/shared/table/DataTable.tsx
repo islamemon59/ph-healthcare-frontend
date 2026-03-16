@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,8 +90,8 @@ const DataTable = <TData,>({
       ]
     : columns;
 
-  const { getHeaderGroups, getRowModel } = useReactTable({
-    data,
+  const table = useReactTable({
+    data: data || [],
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -109,13 +110,13 @@ const DataTable = <TData,>({
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
-            {getHeaderGroups().map((hg) => (
+            {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id}>
                 {hg.headers.map((header) => (
                   <TableHead key={header.id}>
                     {flexRender(
                       header.column.columnDef.header,
-                      header.getContext(),
+                      header.getContext()
                     )}
                   </TableHead>
                 ))}
@@ -123,14 +124,14 @@ const DataTable = <TData,>({
             ))}
           </TableHeader>
           <TableBody>
-            {getRowModel().rows.length ? (
-              getRowModel().rows.map((row) => (
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </TableCell>
                   ))}

@@ -14,7 +14,7 @@ const DoctorsTable = () => {
     queryFn: getDoctors,
   });
 
-  const { data: doctors } = doctorDataResponse! || [];
+  const doctors = doctorDataResponse?.data;
 
   const handleView = (doctor: IDoctor) => {
     console.log("View doctor", doctor);

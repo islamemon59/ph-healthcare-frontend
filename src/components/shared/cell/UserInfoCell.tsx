@@ -1,0 +1,25 @@
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+interface UserInfoCellProps {
+  name: string;
+  email: string;
+  profilePhoto: string;
+}
+
+const UserInfoCell = ({ name, email, profilePhoto }: UserInfoCellProps) => {
+  const initials = name.split(" ")[0][0] + name.split(" ")[1][0];
+  return (
+    <div className="flex items-center gap-3">
+      <Avatar className="h-10 w-10">
+        <AvatarImage src={profilePhoto || undefined} alt={name} />
+        <AvatarFallback>{initials}</AvatarFallback>
+      </Avatar>
+      <div className="flex flex-col">
+        <span className="font-medium text-sm">{name}</span>
+        <span className="text-muted-foreground text-x">{email}</span>
+      </div>
+    </div>
+  );
+};
+
+export default UserInfoCell;
