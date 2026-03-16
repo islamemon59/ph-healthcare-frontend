@@ -13,6 +13,7 @@ const DoctorsTable = () => {
   });
 
   const doctors = doctorDataResponse?.data;
+  console.log(doctors);
 
   const handleView = (doctor: IDoctor) => {
     console.log("View doctor", doctor);
