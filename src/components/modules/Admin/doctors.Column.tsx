@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Star } from "lucide-react";
 import UserInfoCell from "../../shared/cell/UserInfoCell";
 import DateCell from "../../shared/cell/DateCell";
+import StatusBadgeCell from "../../shared/cell/StatusBadgeCell";
 
 export const doctorColumns: ColumnDef<IDoctor>[] = [
   //id or accessorKey is same as the key in the data object
@@ -89,6 +90,9 @@ export const doctorColumns: ColumnDef<IDoctor>[] = [
     id: "status",
     accessorKey: "user.status",
     header: "Status",
+    cell: ({ row }) => {
+        return StatusBadgeCell({ status: row.original.user.status });
+    }
   },
   {
     id: "createdAt",

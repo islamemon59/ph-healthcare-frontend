@@ -3,12 +3,10 @@ import { getDoctors } from "@/src/services/doctor.services";
 import { useQuery } from "@tanstack/react-query";
 import DataTable from "../../shared/table/DataTable";
 import { IDoctor } from "@/src/types/doctor.types";
+import { doctorColumns } from "./doctors.Column";
 
 const DoctorsTable = () => {
-  const doctorsColumns = [
-    { accessorKey: "name", header: "Name" },
-    { accessorKey: "experience", header: "Experience" },
-  ];
+
   const { data: doctorDataResponse, isLoading } = useQuery({
     queryKey: ["doctors"],
     queryFn: getDoctors,
@@ -29,8 +27,8 @@ const DoctorsTable = () => {
   };
   return (
     <DataTable
-      data={doctors}
-      columns={doctorsColumns}
+      data={doctors as IDoctor[]}
+      columns={doctorColumns}
       isLoading={isLoading}
       emptyMessage="No doctors found."
       actions={{
