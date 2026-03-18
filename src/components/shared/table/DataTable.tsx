@@ -1,20 +1,6 @@
 "use client";
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/src/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/src/components/ui/table";
-import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
@@ -34,7 +20,9 @@ import DataTableFilters, {
 import DataTablePagination from "./DataTablePagination";
 import DataTableSearch from "./DataTableSearch";
 import { PaginationMeta } from "@/src/types/api.types";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../ui/dropdown-menu";
 import { Button } from "../../ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table";
 
 interface DataTableActions<TData> {
   onView?: (data: TData) => void;
@@ -94,7 +82,8 @@ const DataTable = <TData,>({
     setHasHydrated(true);
   }, []);
 
-  const showLoadingOverlay = Boolean(isLoading) && hasHydrated;
+  const hydratedIsLoading = hasHydrated ? Boolean(isLoading) : false;
+  const showLoadingOverlay = hydratedIsLoading;
 
   const tableColumns: ColumnDef<TData>[] = actions
     ? [
@@ -203,7 +192,7 @@ const DataTable = <TData,>({
               placeholder={search.placeholder}
               debounceMs={search.debounceMs}
               onDebouncedChange={search.onDebouncedChange}
-              isLoading={isLoading}
+              isLoading={hydratedIsLoading}
             />
           )}
 
@@ -213,7 +202,7 @@ const DataTable = <TData,>({
               values={filters.values}
               onFilterChange={filters.onFilterChange}
               onClearAll={filters.onClearAll}
-              isLoading={isLoading}
+              isLoading={hydratedIsLoading}
             />
           )}
 
@@ -293,7 +282,7 @@ const DataTable = <TData,>({
             table={table}
             totalPages={meta?.totalPages}
             totalRows={meta?.total}
-            isLoading={isLoading}
+            isLoading={hydratedIsLoading}
           />
         )}
       </div>
