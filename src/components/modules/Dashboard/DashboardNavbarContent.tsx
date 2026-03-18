@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import DashboardMobileSidebar from "./DashboardMobileSidebar";
 import { UserInfo } from "@/src/types/user.types";
 import { NavSection } from "@/src/types/dashboard.types";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import NotificationDropdown from "./NotificationDropdown";

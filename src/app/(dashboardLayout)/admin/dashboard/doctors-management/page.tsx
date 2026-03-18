@@ -1,44 +1,34 @@
-import DoctorsTable from "@/src/components/modules/Admin/DoctorsTable";
-import { getDoctors } from "@/src/services/doctor.services";
+import AdminDashboardContent from "@/src/components/modules/Dashboard/AdminDashboardContent";
+import { getDashboardData } from "@/src/services/dashboard.services";
+import { ApiResponse } from "@/src/types/api.types";
+import { IAdminDashboardData } from "@/src/types/dashboard.types";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
-import React from "react";
 
-const DoctorsManagementPage = async ({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) => {
-  const queryParamsObjects = await searchParams;
-
-  const queryString = Object.keys(queryParamsObjects)
-    .map((key) => {
-      const value = queryParamsObjects[key];
-      if (Array.isArray(value)) {
-        return value.map((val) => `${key}=${val}`).join("&");
-      }
-      return `${key}=${value}`;
-    })
-    .join("&");
-
-  console.log(queryString, "queryString");
-
+const AdminDashboardPage = async () => {
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ["doctors", queryString],
-    queryFn: () => getDoctors(queryString),
-    staleTime: 1000 * 60 * 60, // 1 hour
-    gcTime: 1000 * 60 * 60 * 6, // 1 hour
+    queryKey: ["admin-dashboard-data"],
+    queryFn: getDashboardData,
+    staleTime: 30 * 1000, // 30 seconds - data stays fresh if this data is accessed again within 30 seconds, it will use the cached data instead of making a new request
+    gcTime: 5 * 60 * 1000, // 5 minutes - garbage collection time, after this time the cached data will be removed from memory if it's not used
   });
+
+  const dashboardData = queryClient.getQueryData([
+    "admin-dashboard-data",
+  ]) as ApiResponse<IAdminDashboardData>;
+
+  console.log(dashboardData.data, "Dashboard Data from Page Component");
+
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <DoctorsTable initialQueryString={queryString} />
+      <AdminDashboardContent />
     </HydrationBoundary>
   );
 };
 
-export default DoctorsManagementPage;
+export default AdminDashboardPage;

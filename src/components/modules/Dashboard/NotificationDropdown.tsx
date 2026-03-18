@@ -5,11 +5,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/src/components/ui/dropdown-menu";
 import { Bell, Calendar, CheckCircle, Clock, UserPlus } from "lucide-react";
 import React from "react";
 import { Button } from "../../ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/src/components/ui/badge";
 import { ScrollArea } from "../../ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 

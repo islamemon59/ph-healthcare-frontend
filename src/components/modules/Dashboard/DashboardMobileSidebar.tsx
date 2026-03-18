@@ -9,7 +9,7 @@ import React from "react";
 import { ScrollArea } from "../../ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Separator } from "../../ui/separator";
-import { SheetTitle } from "@/components/ui/sheet";
+import { SheetTitle } from "@/src/components/ui/sheet";
 
 interface DashboardMobileSidebarProps {
   userInfo: UserInfo;

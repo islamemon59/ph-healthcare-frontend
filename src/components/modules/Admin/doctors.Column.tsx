@@ -1,10 +1,11 @@
+
 import { IDoctor } from "@/src/types/doctor.types";
 import { ColumnDef } from "@tanstack/react-table";
 import { Star } from "lucide-react";
 import UserInfoCell from "../../shared/cell/UserInfoCell";
-import DateCell from "../../shared/cell/DateCell";
+import { Badge } from "../../ui/badge";
 import StatusBadgeCell from "../../shared/cell/StatusBadgeCell";
-import { Badge } from "@/components/ui/badge";
+import DateCell from "../../shared/cell/DateCell";
 
 export const doctorColumns: ColumnDef<IDoctor>[] = [
   //id or accessorKey is same as the key in the data object
@@ -12,45 +13,44 @@ export const doctorColumns: ColumnDef<IDoctor>[] = [
     id: "name",
     accessorKey: "name",
     header: "Doctor",
-    cell: ({ row }) => (
-      <UserInfoCell
-        name={row.original.name || ""}
-        email={row.original.email || ""}
-        profilePhoto={row.original.profilePhoto || ""}
-      />
+    cell: ({ row }) => ( 
+        <UserInfoCell
+            name={row.original.name}
+            email={row.original.email}
+            profilePhoto={row.original.profilePhoto || ""}
+        />
     ),
   },
   {
     id: "specialties",
     accessorKey: "specialties",
+    enableSorting: false,
     header: "Specialties",
     cell: ({ row }) => {
-      const specialties = row.original.specialties;
+        const specialties = row.original.specialties
 
-      if (!specialties || specialties.length === 0) {
-        return (
-          <span className="text-xs text-muted-foreground">No Specialties</span>
-        );
-      }
-
-      return (
-        <div>
-          {specialties.map(({ specialty }, id) => {
-            const title = specialty?.title || "N/A";
+        if(!specialties || specialties.length === 0) {
             return (
-              <Badge variant={"secondary"} key={id}>
-                {title}
-              </Badge>
-            );
-          })}
-        </div>
-      );
+                <span className="text-xs text-muted-foreground">No Specialties</span>
+            )
+        }
+
+
+        return (
+            <div>
+                {
+                specialties.map(({specialty}, id) => {
+                    const title = specialty.title || "N/A";
+                    return (
+                        <Badge variant={"secondary"} key={id}>
+                            {title}
+                        </Badge>
+                    )
+                })
+                }
+            </div>
+        )
     },
-  },
-  {
-    id: "specialties",
-    accessorKey: "specialties",
-    header: "Specialties",
   },
   {
     id: "contactNumber",
@@ -118,7 +118,9 @@ export const doctorColumns: ColumnDef<IDoctor>[] = [
     accessorKey: "user.status",
     header: "Status",
     cell: ({ row }) => {
-      return StatusBadgeCell({ status: row.original.user.status });
+      return (
+        <StatusBadgeCell status={row.original.user.status} />
+      );
     },
   },
   {

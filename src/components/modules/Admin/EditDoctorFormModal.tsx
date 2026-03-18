@@ -1,5 +1,7 @@
-"use client";
+"use client"
 
+
+import { Button } from "@/src/components/ui/button"
 import {
   Dialog,
   DialogClose,
@@ -7,95 +9,118 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/src/components/ui/dialog";
-import { ScrollArea } from "@/src/components/ui/scroll-area";
+} from "@/src/components/ui/dialog"
+import { ScrollArea } from "@/src/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { Textarea } from "@/src/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import { useForm } from "@tanstack/react-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
-import { toast } from "sonner";
-import SpecialtiesMultiSelect from "./SpecialtiesMultiSelect";
-import { ISpecialty } from "@/src/types/specialty.types";
-import { createDoctorFormZodSchema, ICreateDoctorFormValues } from "@/src/zod/doctor.validation";
-import { Gender } from "@/src/types/doctor.types";
-import { createDoctorAction } from "@/src/app/(dashboardLayout)/admin/dashboard/doctors-management/_action";
-import { Button } from "../../ui/button";
-import AppField from "../../shared/form/AppField";
-import { Label } from "../../ui/label";
-import AppSubmitButton from "../../shared/form/AppSubmitButton";
+} from "@/src/components/ui/select"
+import { Textarea } from "@/src/components/ui/textarea"
+import { cn } from "@/lib/utils"
+import { useForm } from "@tanstack/react-form"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { toast } from "sonner"
+import SpecialtiesMultiSelect from "./SpecialtiesMultiSelect"
+import { Gender, IDoctor, IUpdateDoctorPayload } from "@/src/types/doctor.types"
+import { ISpecialty } from "@/src/types/specialty.types"
+import { editDoctorFormZodSchema, IEditDoctorFormValues } from "@/src/zod/doctor.validation"
+import { updateDoctorAction } from "@/src/app/(dashboardLayout)/admin/dashboard/doctors-management/_action"
+import AppField from "../../shared/form/AppField"
+import { Label } from "../../ui/label"
+import AppSubmitButton from "../../shared/form/AppSubmitButton"
 
-interface CreateDoctorFormModalProps {
-  specialties: ISpecialty[];
-  isLoadingSpecialties?: boolean;
+interface EditDoctorFormModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  doctor: IDoctor | null
+  specialties: ISpecialty[]
+  isLoadingSpecialties?: boolean
 }
 
-const defaultValues: ICreateDoctorFormValues = {
-  password: "",
-  name: "",
-  email: "",
-  contactNumber: "",
-  address: "",
-  registrationNumber: "",
-  experience: "",
-  gender: Gender.MALE,
-  appointmentFee: "",
-  qualification: "",
-  currentWorkingPlace: "",
-  designation: "",
-  specialties: [],
-};
+const getInitialValues = (doctor: IDoctor | null): IEditDoctorFormValues => ({
+  name: doctor?.name ?? "",
+  contactNumber: doctor?.contactNumber ?? "",
+  address: doctor?.address ?? "",
+  registrationNumber: doctor?.registrationNumber ?? "",
+  experience: doctor?.experience?.toString() ?? "",
+  gender: doctor?.gender === Gender.FEMALE ? Gender.FEMALE : Gender.MALE,
+  appointmentFee: doctor?.appointmentFee?.toString() ?? "",
+  qualification: doctor?.qualification ?? "",
+  currentWorkingPlace: doctor?.currentWorkingPlace ?? "",
+  designation: doctor?.designation ?? "",
+  specialties: doctor?.specialties?.map((item) => item.specialty.id) ?? [],
+})
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error === "string") {
-    return error;
+    return error
   }
 
   if (error && typeof error === "object" && "message" in error) {
-    return String(error.message);
+    return String(error.message)
   }
 
-  return "Invalid input";
-};
+  return "Invalid input"
+}
 
 const FieldMessage = ({ error }: { error: unknown }) => {
   if (!error) {
-    return null;
+    return null
   }
 
-  return <p className="text-sm text-destructive">{getErrorMessage(error)}</p>;
-};
+  return <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+}
 
-const CreateDoctorFormModal = ({
+const EditDoctorFormModal = ({
+  open,
+  onOpenChange,
+  doctor,
   specialties,
   isLoadingSpecialties = false,
-}: CreateDoctorFormModalProps) => {
-  const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const router = useRouter();
+}: EditDoctorFormModalProps) => {
+  const queryClient = useQueryClient()
+  const router = useRouter()
 
   const { mutateAsync, isPending } = useMutation({
-    mutationFn: createDoctorAction,
-  });
+    mutationFn: ({ doctorId, payload }: { doctorId: string; payload: IUpdateDoctorPayload }) =>
+      updateDoctorAction(doctorId, payload),
+  })
 
   const form = useForm({
-    defaultValues,
+    defaultValues: getInitialValues(doctor),
     onSubmit: async ({ value }) => {
-      const payload = {
-        password: value.password,
+      if (!doctor) {
+        toast.error("Doctor not found")
+        return
+      }
+
+      const originalSpecialtyIds = new Set(
+        doctor.specialties.map((item) => item.specialty.id),
+      )
+      const nextSpecialtyIds = new Set(value.specialties)
+
+      const specialtyChanges: IUpdateDoctorPayload["specialties"] = []
+
+      nextSpecialtyIds.forEach((specialtyId) => {
+        if (!originalSpecialtyIds.has(specialtyId)) {
+          specialtyChanges.push({ specialtyId, shouldDelete: false })
+        }
+      })
+
+      originalSpecialtyIds.forEach((specialtyId) => {
+        if (!nextSpecialtyIds.has(specialtyId)) {
+          specialtyChanges.push({ specialtyId, shouldDelete: true })
+        }
+      })
+
+      const payload: IUpdateDoctorPayload = {
         doctor: {
           name: value.name,
-          email: value.email,
           contactNumber: value.contactNumber,
           address: value.address,
           registrationNumber: value.registrationNumber,
@@ -106,58 +131,45 @@ const CreateDoctorFormModal = ({
           currentWorkingPlace: value.currentWorkingPlace,
           designation: value.designation,
         },
-        specialties: value.specialties,
-      } as const;
+        ...(specialtyChanges.length > 0 ? { specialties: specialtyChanges } : {}),
+      }
 
-      const result = await mutateAsync(payload);
+      const result = await mutateAsync({
+        doctorId: String(doctor.id),
+        payload,
+      })
 
       if (!result.success) {
-        toast.error(result.message || "Failed to create doctor");
-        return;
+        toast.error(result.message || "Failed to update doctor")
+        return
       }
 
-      toast.success(result.message || "Doctor created successfully");
-      setOpen(false);
-      form.reset();
+      toast.success(result.message || "Doctor updated successfully")
+      onOpenChange(false)
 
-      void queryClient.invalidateQueries({ queryKey: ["doctors"] });
-      void queryClient.refetchQueries({
-        queryKey: ["doctors"],
-        type: "active",
-      });
-      router.refresh();
+      void queryClient.invalidateQueries({ queryKey: ["doctors"] })
+      void queryClient.refetchQueries({ queryKey: ["doctors"], type: "active" })
+      router.refresh()
     },
-  });
+  })
 
-  const handleOpenChange = useCallback(
-    (nextOpen: boolean) => {
-      setOpen(nextOpen);
-
-      if (!nextOpen) {
-        form.reset();
-      }
-    },
-    [form],
-  );
+  useEffect(() => {
+    if (open) {
+      form.reset(getInitialValues(doctor))
+    }
+  }, [doctor, form, open])
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button type="button" className="ml-auto shrink-0">
-          <Plus className="size-4" />
-          Create Doctor
-        </Button>
-      </DialogTrigger>
-
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] gap-0 overflow-hidden p-0 sm:w-[calc(100vw-3rem)] sm:max-w-[calc(100vw-3rem)] md:w-[calc(100vw-4rem)] md:max-w-[calc(100vw-4rem)] lg:w-[min(92vw,78rem)] lg:max-w-[min(92vw,78rem)] xl:w-[min(88vw,88rem)] xl:max-w-[min(88vw,88rem)] 2xl:w-[min(84vw,96rem)] 2xl:max-w-[min(84vw,96rem)]"
         onInteractOutside={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => event.preventDefault()}
       >
         <DialogHeader className="border-b px-6 py-5 pr-14">
-          <DialogTitle>Create Doctor</DialogTitle>
+          <DialogTitle>Edit Doctor</DialogTitle>
           <DialogDescription>
-            Add a new doctor profile with account credentials and specialties.
+            Update doctor profile information and specialties.
           </DialogDescription>
         </DialogHeader>
 
@@ -168,18 +180,16 @@ const CreateDoctorFormModal = ({
               action="#"
               noValidate
               onSubmit={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                form.handleSubmit();
+                event.preventDefault()
+                event.stopPropagation()
+                form.handleSubmit()
               }}
               className="space-y-5"
             >
               <div className="grid gap-4 md:grid-cols-2">
                 <form.Field
                   name="name"
-                  validators={{
-                    onChange: createDoctorFormZodSchema.shape.name,
-                  }}
+                  validators={{ onChange: editDoctorFormZodSchema.shape.name }}
                 >
                   {(field) => (
                     <AppField
@@ -190,43 +200,16 @@ const CreateDoctorFormModal = ({
                   )}
                 </form.Field>
 
-                <form.Field
-                  name="email"
-                  validators={{
-                    onChange: createDoctorFormZodSchema.shape.email,
-                  }}
-                >
-                  {(field) => (
-                    <AppField
-                      field={field}
-                      label="Email"
-                      type="email"
-                      placeholder="doctor@example.com"
-                    />
-                  )}
-                </form.Field>
-
-                <form.Field
-                  name="password"
-                  validators={{
-                    onChange: createDoctorFormZodSchema.shape.password,
-                  }}
-                >
-                  {(field) => (
-                    <AppField
-                      field={field}
-                      label="Password"
-                      type="password"
-                      placeholder="Enter temporary password"
-                    />
-                  )}
-                </form.Field>
+                <div className="space-y-1.5">
+                  <Label>Email</Label>
+                  <div className="bg-muted text-muted-foreground rounded-md border px-3 py-2 text-sm">
+                    {doctor?.email ?? "N/A"}
+                  </div>
+                </div>
 
                 <form.Field
                   name="contactNumber"
-                  validators={{
-                    onChange: createDoctorFormZodSchema.shape.contactNumber,
-                  }}
+                  validators={{ onChange: editDoctorFormZodSchema.shape.contactNumber }}
                 >
                   {(field) => (
                     <AppField
@@ -239,10 +222,7 @@ const CreateDoctorFormModal = ({
 
                 <form.Field
                   name="registrationNumber"
-                  validators={{
-                    onChange:
-                      createDoctorFormZodSchema.shape.registrationNumber,
-                  }}
+                  validators={{ onChange: editDoctorFormZodSchema.shape.registrationNumber }}
                 >
                   {(field) => (
                     <AppField
@@ -255,9 +235,7 @@ const CreateDoctorFormModal = ({
 
                 <form.Field
                   name="experience"
-                  validators={{
-                    onChange: createDoctorFormZodSchema.shape.experience,
-                  }}
+                  validators={{ onChange: editDoctorFormZodSchema.shape.experience }}
                 >
                   {(field) => (
                     <AppField
@@ -271,9 +249,7 @@ const CreateDoctorFormModal = ({
 
                 <form.Field
                   name="appointmentFee"
-                  validators={{
-                    onChange: createDoctorFormZodSchema.shape.appointmentFee,
-                  }}
+                  validators={{ onChange: editDoctorFormZodSchema.shape.appointmentFee }}
                 >
                   {(field) => (
                     <AppField
@@ -287,9 +263,7 @@ const CreateDoctorFormModal = ({
 
                 <form.Field
                   name="qualification"
-                  validators={{
-                    onChange: createDoctorFormZodSchema.shape.qualification,
-                  }}
+                  validators={{ onChange: editDoctorFormZodSchema.shape.qualification }}
                 >
                   {(field) => (
                     <AppField
@@ -302,10 +276,7 @@ const CreateDoctorFormModal = ({
 
                 <form.Field
                   name="currentWorkingPlace"
-                  validators={{
-                    onChange:
-                      createDoctorFormZodSchema.shape.currentWorkingPlace,
-                  }}
+                  validators={{ onChange: editDoctorFormZodSchema.shape.currentWorkingPlace }}
                 >
                   {(field) => (
                     <AppField
@@ -318,9 +289,7 @@ const CreateDoctorFormModal = ({
 
                 <form.Field
                   name="designation"
-                  validators={{
-                    onChange: createDoctorFormZodSchema.shape.designation,
-                  }}
+                  validators={{ onChange: editDoctorFormZodSchema.shape.designation }}
                 >
                   {(field) => (
                     <AppField
@@ -333,21 +302,18 @@ const CreateDoctorFormModal = ({
 
                 <form.Field
                   name="gender"
-                  validators={{
-                    onChange: createDoctorFormZodSchema.shape.gender,
-                  }}
+                  validators={{ onChange: editDoctorFormZodSchema.shape.gender }}
                 >
                   {(field) => {
                     const firstError =
-                      field.state.meta.isTouched &&
-                      field.state.meta.errors.length > 0
+                      field.state.meta.isTouched && field.state.meta.errors.length > 0
                         ? field.state.meta.errors[0]
-                        : null;
+                        : null
 
                     return (
                       <div className="space-y-1.5">
                         <Label
-                          htmlFor="doctor-gender"
+                          htmlFor="edit-doctor-gender"
                           className={cn(firstError && "text-destructive")}
                         >
                           Gender
@@ -355,18 +321,13 @@ const CreateDoctorFormModal = ({
                         <Select
                           value={field.state.value}
                           onValueChange={(value) => {
-                            field.handleChange(
-                              value as ICreateDoctorFormValues["gender"],
-                            );
-                            field.handleBlur();
+                            field.handleChange(value as IEditDoctorFormValues["gender"])
+                            field.handleBlur()
                           }}
                         >
                           <SelectTrigger
-                            id="doctor-gender"
-                            className={cn(
-                              "w-full",
-                              firstError && "border-destructive",
-                            )}
+                            id="edit-doctor-gender"
+                            className={cn("w-full", firstError && "border-destructive")}
                           >
                             <SelectValue placeholder="Select gender" />
                           </SelectTrigger>
@@ -377,22 +338,19 @@ const CreateDoctorFormModal = ({
                         </Select>
                         <FieldMessage error={firstError} />
                       </div>
-                    );
+                    )
                   }}
                 </form.Field>
 
                 <form.Field
                   name="address"
-                  validators={{
-                    onChange: createDoctorFormZodSchema.shape.address,
-                  }}
+                  validators={{ onChange: editDoctorFormZodSchema.shape.address }}
                 >
                   {(field) => {
                     const firstError =
-                      field.state.meta.isTouched &&
-                      field.state.meta.errors.length > 0
+                      field.state.meta.isTouched && field.state.meta.errors.length > 0
                         ? field.state.meta.errors[0]
-                        : null;
+                        : null
 
                     return (
                       <div className="space-y-1.5 md:col-span-2">
@@ -408,31 +366,26 @@ const CreateDoctorFormModal = ({
                           value={field.state.value}
                           placeholder="Enter doctor address"
                           onBlur={field.handleBlur}
-                          onChange={(event) =>
-                            field.handleChange(event.target.value)
-                          }
+                          onChange={(event) => field.handleChange(event.target.value)}
                           aria-invalid={!!firstError}
                           className={cn(firstError && "border-destructive")}
                         />
                         <FieldMessage error={firstError} />
                       </div>
-                    );
+                    )
                   }}
                 </form.Field>
               </div>
 
               <form.Field
                 name="specialties"
-                validators={{
-                  onChange: createDoctorFormZodSchema.shape.specialties,
-                }}
+                validators={{ onChange: editDoctorFormZodSchema.shape.specialties }}
               >
                 {(field) => {
                   const firstError =
-                    field.state.meta.isTouched &&
-                    field.state.meta.errors.length > 0
+                    field.state.meta.isTouched && field.state.meta.errors.length > 0
                       ? field.state.meta.errors[0]
-                      : null;
+                      : null
 
                   return (
                     <SpecialtiesMultiSelect
@@ -444,7 +397,7 @@ const CreateDoctorFormModal = ({
                       error={firstError}
                       getErrorMessage={getErrorMessage}
                     />
-                  );
+                  )
                 }}
               </form.Field>
 
@@ -456,18 +409,16 @@ const CreateDoctorFormModal = ({
                 </DialogClose>
 
                 <form.Subscribe
-                  selector={(state) =>
-                    [state.canSubmit, state.isSubmitting] as const
-                  }
+                  selector={(state) => [state.canSubmit, state.isSubmitting] as const}
                 >
                   {([canSubmit, isSubmitting]) => (
                     <AppSubmitButton
                       isPending={isSubmitting || isPending}
-                      pendingLabel="Creating doctor..."
+                      pendingLabel="Updating doctor..."
                       disabled={!canSubmit || isLoadingSpecialties}
                       className="w-auto min-w-36"
                     >
-                      Create Doctor
+                      Update Doctor
                     </AppSubmitButton>
                   )}
                 </form.Subscribe>
@@ -477,7 +428,7 @@ const CreateDoctorFormModal = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default CreateDoctorFormModal;
+export default EditDoctorFormModal

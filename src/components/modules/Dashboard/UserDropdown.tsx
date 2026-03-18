@@ -5,7 +5,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/src/components/ui/dropdown-menu";
 import { UserInfo } from "@/src/types/user.types";
 import React from "react";
 import { Button } from "../../ui/button";
