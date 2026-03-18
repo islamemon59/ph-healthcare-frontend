@@ -1,34 +1,67 @@
-import AdminDashboardContent from "@/src/components/modules/Dashboard/AdminDashboardContent";
-import { getDashboardData } from "@/src/services/dashboard.services";
-import { ApiResponse } from "@/src/types/api.types";
-import { IAdminDashboardData } from "@/src/types/dashboard.types";
-import {
-  dehydrate,
-  HydrationBoundary,
-  QueryClient,
-} from "@tanstack/react-query";
 
-const AdminDashboardPage = async () => {
+import DoctorsTable from "@/src/components/modules/Admin/DoctorsTable";
+import { getAllSpecialties, getDoctors } from "@/src/services/doctor.services";
+import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+
+const DoctorsManagementPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) => {
+  const queryParamsObjects = await searchParams;
+  /*
+  {
+  searchTerm: "cardio",
+  page: "1",
+  limit: "10",
+  gender: "MALE",
+  "appointFee[gt]": "500",
+}
+  */
+  // ?searchTerm=cardio&page=1&limit=10&gender=MALE&appointFee[gt]=500
+
+  // const queryString = Object.keys(queryParamsObjects).map((key) => `${key}=${queryParamsObjects[key]}`).join("&");
+
+  //if the value is an array, we need to convert it to multiple query params with the same key
+  const queryString = Object.keys(queryParamsObjects)
+    .map((key) => {
+      const value = queryParamsObjects[key];
+      if (value === undefined) {
+        return "";
+      }
+
+      if (Array.isArray(value)) {
+        return value
+          .map((v) => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`)
+          .join("&");
+      }
+
+      return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+    })
+    .filter(Boolean)
+    .join("&");
+
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ["admin-dashboard-data"],
-    queryFn: getDashboardData,
-    staleTime: 30 * 1000, // 30 seconds - data stays fresh if this data is accessed again within 30 seconds, it will use the cached data instead of making a new request
-    gcTime: 5 * 60 * 1000, // 5 minutes - garbage collection time, after this time the cached data will be removed from memory if it's not used
+    queryKey: ["doctors", queryString],
+    queryFn: () => getDoctors(queryString),
+    staleTime: 1000 * 60 * 60, // 1 hour
+    gcTime: 1000 * 60 * 60 * 6, // 6 hours
   });
 
-  const dashboardData = queryClient.getQueryData([
-    "admin-dashboard-data",
-  ]) as ApiResponse<IAdminDashboardData>;
-
-  console.log(dashboardData.data, "Dashboard Data from Page Component");
+  await queryClient.prefetchQuery({
+    queryKey: ["specialties"],
+    queryFn: () => getAllSpecialties(),
+    staleTime: 1000 * 60 * 60 * 6, // 6 hours
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+  });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <AdminDashboardContent />
+      <DoctorsTable initialQueryString={queryString} />
     </HydrationBoundary>
   );
 };
 
-export default AdminDashboardPage;
+export default DoctorsManagementPage

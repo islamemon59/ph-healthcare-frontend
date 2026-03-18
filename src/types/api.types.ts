@@ -2,7 +2,7 @@ export interface ApiResponse<TData = unknown> {
   success: string;
   message: string;
   data: TData;
-  meat?: PaginationMeta;
+  meta?: PaginationMeta;
 }
 
 export interface PaginationMeta {

@@ -19,6 +19,7 @@ import { DataTableFilterConfig, DataTableFilterValues } from "../../shared/table
 import DataTable from "../../shared/table/DataTable";
 import { doctorColumns } from "./doctors.Column";
 
+
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 const SPECIALTIES_FILTER_KEY = "specialties.specialty.title";
@@ -95,7 +96,7 @@ const DoctorsTable = ({ initialQueryString }: { initialQueryString: string }) =>
     const specialties = useMemo<ISpecialty[]>(() => {
       return specialtiesResponse?.data ?? [];
     }, [specialtiesResponse]);
-    const meta: PaginationMeta | undefined = doctorDataResponse?.meat;
+    const meta: PaginationMeta | undefined = doctorDataResponse?.meta;
 
     const filterConfigs = useMemo<DataTableFilterConfig[]>(() => {
       return [
