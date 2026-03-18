@@ -5,11 +5,18 @@ import DataTable from "../../shared/table/DataTable";
 import { IDoctor } from "@/src/types/doctor.types";
 import { doctorColumns } from "./doctors.Column";
 
-const DoctorsTable = () => {
+const DoctorsTable = ({
+  initialQueryString,
+}: {
+  initialQueryString: string;
+}) => {
+
+  const queryString = initialQueryString;
+
 
   const { data: doctorDataResponse, isLoading } = useQuery({
-    queryKey: ["doctors"],
-    queryFn: getDoctors,
+    queryKey: ["doctors", queryString],
+    queryFn: () => getDoctors(queryString),
   });
 
   const doctors = doctorDataResponse?.data;
